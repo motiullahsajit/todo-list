@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class='bg-warning'>
+    <div class="container d-flex justify-content-center align-items-center" style="height: 500px;">
+        <div class="col-md-4 bg-dark text-white p-2">
+            <h1 class='text-center'>Make Your List</h1>
+            <form action="/addtodo" class='m-2 align-items-center d-flex justify-content-between' method="post">
+                <input class="w-75 p-2" type="text" placeholder="write here..." name="name">
+                <button class="py-2 btn btn-success" type='submit'>Add Todo</button>
+            </form>
+            <div id='todo'>
+
+            </div>
+
+            <div id="update">
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loadAllTodo = () => {
+            fetch('/todo')
+                .then(res => res.json())
+                .then(todo => setData(todo))
+
+            const setData = (todo) => {
+                console.log(todo)
+                const container = document.getElementById('todo')
+                container.innerHTML = ''
+                todo.forEach(pd => {
+                    const div = document.createElement('div')
+                    div.classList = 'm-2 bg-success text-white d-flex justify-content-around text-center'
+                    div.innerHTML = `
+                       <div class='col-8 fs-3'> <h3>${pd.name}</h3></div>
+                       <div class='col-1 mx-1'> <i class="fas fa-pen p-2 px-3 text-white fs-4" onclick="loadTodo('${pd._id}')"></i></div>
+                       <div class='col-1 mx-1'> <i class="fas fa-trash p-2 px-3 text-white fs-4" onclick="deleteTodo(event, '${pd._id}')"></i></div>
+                    `
+                    container.appendChild(div)
+                })
+            }
+        }
+        loadAllTodo();
+
+        function loadTodo(id) {
+            fetch(`todo/${id}`)
+                .then(res => res.json())
+                .then(data => {
+                    const update = document.getElementById('update')
+                    update.classList='d-flex justify-content-around'
+                    update.innerHTML = `
+                    <input class="w-75 p-2 m-2" type='text' value='${data.name}' id='name'>
+                    <i class="fas fa-save text-warning fs-3 m-3" onclick="updateTodo('${data._id}')"></i>
+                    `
+                })
+        }
+
+        function updateTodo(id) {
+            console.log('hit inside')
+            const name = document.getElementById('name').value;
+            const todo = { id, name }
+            // console.log(todo)
+            fetch(`/update/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(todo)
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        loadAllTodo()
+                        document.getElementById('update').innerHTML = ''
+                    }
+                })
+        }
+
+        function deleteTodo(event, id) {
+            // console.log(event.target.parentNode)
+            fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (result) {
+                        console.log(event.target.parentNode)
+                        // event.target.parentNode.parentNode.style.display = "none";
+                        loadAllTodo()
+                    }
+                })
+        }
+    </script>
+</body>
+
+</html>
